@@ -2,6 +2,7 @@ package io.NextGenAudio.Playlist.Service.controller;
 
 import io.NextGenAudio.Playlist.Service.service.PlaylistService;
 import io.NextGenAudio.Playlist.Service.model.Playlist;
+import io.NextGenAudio.Playlist.Service.model.PlaylistMusic;
 import io.NextGenAudio.Playlist.Service.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,18 @@ public class PlaylistController {
         try {
             Playlist playlist = playlistService.getPlaylist(playlistId, getCurrentUserId());
             return ResponseEntity.ok(playlist);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/{playlistId}/tracks")
+    public ResponseEntity<List<PlaylistMusic>> getPlaylistTracks(@PathVariable Integer playlistId) {
+        try {
+            List<PlaylistMusic> tracks = playlistService.getPlaylistTracks(playlistId, getCurrentUserId());
+            return ResponseEntity.ok(tracks);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         } catch (SecurityException e) {

@@ -1,5 +1,6 @@
 package io.NextGenAudio.Playlist.Service.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
@@ -50,4 +51,13 @@ public class PlaylistMusic {
 
     public OffsetDateTime getAddedAt() { return addedAt; }
     public void setAddedAt(OffsetDateTime addedAt) { this.addedAt = addedAt; }
+
+    @Override
+    public String toString() {
+        return "PlaylistMusic{" +
+                "id=" + id +
+                ", musicId=" + musicId +
+                ", position=" + position +
+                '}';
+    }
 }
