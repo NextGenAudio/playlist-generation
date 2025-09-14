@@ -37,6 +37,12 @@ public class PlaylistService {
         return playlist;
     }
 
+    public List<PlaylistMusic> getPlaylistTracks(Integer playlistId, UUID userId) {
+        // Verify user has access to the playlist
+        getPlaylist(playlistId, userId);
+        return playlistMusicRepository.findByPlaylist_PlaylistIdOrderByPositionAsc(playlistId);
+    }
+
     public Playlist updatePlaylist(Integer playlistId, String name, UUID userId) {
         Playlist playlist = getPlaylist(playlistId, userId);
 

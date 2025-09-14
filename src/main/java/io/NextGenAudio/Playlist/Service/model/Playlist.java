@@ -1,5 +1,7 @@
 package io.NextGenAudio.Playlist.Service.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "playlists")
+@JsonIgnoreProperties("tracks")
 public class Playlist {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +47,7 @@ public class Playlist {
     private OffsetDateTime updatedAt;
 
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<PlaylistMusic> tracks;
 
     // Constructors
