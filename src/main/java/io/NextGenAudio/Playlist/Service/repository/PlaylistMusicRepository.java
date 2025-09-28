@@ -10,13 +10,13 @@ import java.util.List;
 
 public interface PlaylistMusicRepository extends JpaRepository<PlaylistMusic, Integer> {
 
-    List<PlaylistMusic> findByPlaylist_PlaylistIdOrderByPositionAsc(Integer playlistId);
+    List<PlaylistMusic> findByPlaylist_PlaylistIdOrderByPositionAsc(Long playlistId);
 
     @Query("SELECT MAX(pm.position) FROM PlaylistMusic pm WHERE pm.playlist.playlistId = :playlistId")
-    Integer findMaxPositionByPlaylistId(@Param("playlistId") Integer playlistId);
+    Integer findMaxPositionByPlaylistId(@Param("playlistId") Long playlistId);
 
     // Corrected method name from fileId to musicId
-    boolean existsByPlaylist_PlaylistIdAndMusicId(Integer playlistId, Long musicId);
+    boolean existsByPlaylist_PlaylistIdAndMusicId(Long playlistId, Long musicId);
 
-    List<PlaylistMusic> findByPlaylistAndIdIn(Playlist playlist, List<Integer> trackIds);
+    List<PlaylistMusic> findByPlaylistAndIdIn(Playlist playlist, List<Long> trackIds);
 }

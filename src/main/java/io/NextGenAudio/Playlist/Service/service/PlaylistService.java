@@ -1,15 +1,21 @@
 package io.NextGenAudio.Playlist.Service.service;
 
+import io.NextGenAudio.Playlist.Service.dto.PlaylistDTO;
+import io.NextGenAudio.Playlist.Service.dto.PlaylistWithMusicsDTO;
 import io.NextGenAudio.Playlist.Service.model.*;
 import io.NextGenAudio.Playlist.Service.repository.*;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
-import java.util.UUID;
+
 
 @Service
-@Transactional
 public class PlaylistService {
 
     @Autowired
@@ -18,74 +24,114 @@ public class PlaylistService {
     @Autowired
     private PlaylistMusicRepository playlistMusicRepository;
 
-    public Playlist createManualPlaylist(String name, UUID userId) {
-        Playlist playlist = new Playlist(name, userId);
+    private String getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new SecurityException("Not authenticated");
+        }
+
+        // Get the user ID (UUID you set in your filter)
+        return auth.getName();
+    }
+
+    public Playlist createManualPlaylist(String name,  String description, MultipartFile artwork) {
+        Playlist playlist = new Playlist(name, getCurrentUserId());
         return playlistRepository.save(playlist);
     }
 
-    public List<Playlist> getUserPlaylists(UUID userId) {
-        return playlistRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public List<PlaylistDTO> getUserPlaylists() {
+        return playlistRepository.findByUserIdOrderByCreatedAtDesc(getCurrentUserId())
+                .stream()
+                .map(p -> new PlaylistDTO(p.getPlaylistId(), p.getName(), p.getDescription(), p.getIsAiGenerated()))
+                .toList();
     }
 
-    public Playlist getPlaylist(Integer playlistId, UUID userId) {
+//    public PlaylistWithMusicsDTO getPlaylistWithMusics(Long playlistId) {
+//        Playlist playlist = playlistRepository.findById(playlistId)
+//                .orElseThrow(() -> new RuntimeException("Playlist not found"));
+//
+//        return new PlaylistWithMusicsDTO(
+//                playlist.getPlaylistId(),
+//                playlist.getName(),
+//                playlist.getDescription(),
+//                Boolean.TRUE.equals(playlist.getIsAiGenerated()),
+//                playlist.getMusics().stream()
+//                        .map(m -> new Music())
+//                        .toList()
+//        );
+//    }
+
+
+
+    public List<Music> listFiles(Long playlistId) {
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new RuntimeException("Playlist not found"));
+        return playlist.getMusics();
+    }
+
+//    public Playlist updatePlaylist(Long playlistId, String name) {
+//        String currentUserId = getCurrentUserId();
+//        Playlist playlist = listFiles(playlistId);
+//
+//        if (!playlist.getCurrentUserId().equals(currentUserId)) {
+//            throw new SecurityException("Only the playlist owner can update");
+//        }
+//
+//        if (name != null && !name.isEmpty()) {
+//            playlist.setName(name);
+//        }
+//        return playlistRepository.save(playlist);
+//    }
+
+    public void deletePlaylist(Long playlistId) {
+        String currentUserId = getCurrentUserId();
+        List<Music> playlist = listFiles(playlistId);
+//
+//        if (!playlist.getUserId().equals(currentUserId)) {
+//            throw new SecurityException("Only playlist owner can delete");
+//        }
+//        playlistRepository.delete(playlist);
+    }
+
+    public void addTracksToPlaylist(Long playlistId, List<Long> fileIds) {
+        String currentUserId = getCurrentUserId();
+
+        // Fetch the playlist entity
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new IllegalArgumentException("Playlist not found"));
 
-        if (!playlist.getUserId().equals(userId)) {
-            throw new SecurityException("Access denied to this playlist");
-        }
-        return playlist;
-    }
+        // Check ownership (uncomment if needed)
+        // if (!playlist.getUserId().equals(currentUserId)) {
+        //     throw new SecurityException("Only playlist owner can add tracks");
+        // }
 
-    public Playlist updatePlaylist(Integer playlistId, String name, UUID userId) {
-        Playlist playlist = getPlaylist(playlistId, userId);
-
-        if (!playlist.getUserId().equals(userId)) {
-            throw new SecurityException("Only the playlist owner can update");
-        }
-
-        if (name != null && !name.isEmpty()) {
-            playlist.setName(name);
-        }
-        return playlistRepository.save(playlist);
-    }
-
-    public void deletePlaylist(Integer playlistId, UUID userId) {
-        Playlist playlist = getPlaylist(playlistId, userId);
-
-        if (!playlist.getUserId().equals(userId)) {
-            throw new SecurityException("Only playlist owner can delete");
-        }
-        playlistRepository.delete(playlist);
-    }
-
-    public void addTracksToPlaylist(Integer playlistId, List<Integer> fileIds, UUID userId) {
-        Playlist playlist = getPlaylist(playlistId, userId);
-
-        if (!playlist.getUserId().equals(userId)) {
-            throw new SecurityException("Only playlist owner can add tracks");
-        }
-
+        // Find the current max position in the playlist
         Integer currentMaxPosition = playlistMusicRepository.findMaxPositionByPlaylistId(playlistId);
         int position = (currentMaxPosition == null ? 1 : currentMaxPosition + 1);
 
-        for (Integer fileId : fileIds) {
-            // Updated to call the corrected repository method
-            if (!playlistMusicRepository.existsByPlaylist_PlaylistIdAndMusicId(playlistId, fileId.longValue())) {
+        for (Long fileId : fileIds) {
+            // Avoid duplicates
+            boolean exists = playlistMusicRepository
+                    .existsByPlaylist_PlaylistIdAndMusicId(playlistId, fileId.longValue());
+
+            if (!exists) {
                 PlaylistMusic track = new PlaylistMusic(playlist, fileId.longValue(), position++);
                 playlistMusicRepository.save(track);
             }
         }
     }
 
-    public void removeTracksFromPlaylist(Integer playlistId, List<Integer> trackIds, UUID userId) {
-        Playlist playlist = getPlaylist(playlistId, userId);
 
-        if (!playlist.getUserId().equals(userId)) {
+    public void removeTracksFromPlaylist(Long playlistId, List<Long> musicIds) {
+        String currentUserId = getCurrentUserId();
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new EntityNotFoundException("Playlist not found with id " + playlistId));;
+
+        if (!playlist.getUserId().equals(currentUserId)) {
             throw new SecurityException("Only playlist owner can remove tracks");
         }
 
-        List<PlaylistMusic> tracksToRemove = playlistMusicRepository.findByPlaylistAndIdIn(playlist, trackIds);
+        List<PlaylistMusic> tracksToRemove = playlistMusicRepository.findByPlaylistAndIdIn(playlist, musicIds);
         playlistMusicRepository.deleteAll(tracksToRemove);
 
         reorderTracksAfterRemoval(playlist);

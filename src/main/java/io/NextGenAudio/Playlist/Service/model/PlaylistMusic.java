@@ -1,53 +1,45 @@
-package io.NextGenAudio.Playlist.Service.model;
+    package io.NextGenAudio.Playlist.Service.model;
 
-import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+    import com.fasterxml.jackson.annotation.JsonBackReference;
+    import jakarta.persistence.*;
+    import lombok.Getter;
+    import lombok.Setter;
 
-@Entity
-@Table(name = "playlist_musics")
-public class PlaylistMusic {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    import java.time.OffsetDateTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "playlist_id", nullable = false)
-    private Playlist playlist;
+    @Entity
+    @Getter
+    @Setter
+    @Table(name = "playlist_musics")
+    public class PlaylistMusic {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Integer id;
 
-    @Column(name = "music_id", nullable = false)
-    private Long musicId;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "playlist_id", nullable = false)
+        @JsonBackReference
+        private Playlist playlist;
 
-    @Column
-    private Integer position;
+        @Column(name = "music_id", nullable = false)
+        private Long musicId;
 
-    @Column(name = "added_at", nullable = false)
-    private OffsetDateTime addedAt;
+        @Column
+        private Integer position;
 
-    // Constructors
-    public PlaylistMusic() {
-        this.addedAt = OffsetDateTime.now();
+        @Column(name = "added_at", nullable = false)
+        private OffsetDateTime addedAt;
+
+        // Constructors
+        public PlaylistMusic() {
+            this.addedAt = OffsetDateTime.now();
+        }
+
+        public PlaylistMusic(Playlist playlist, Long musicId, Integer position) {
+            this();
+            this.playlist = playlist;
+            this.musicId = musicId;
+            this.position = position;
+        }
+
     }
-
-    public PlaylistMusic(Playlist playlist, Long musicId, Integer position) {
-        this();
-        this.playlist = playlist;
-        this.musicId = musicId;
-        this.position = position;
-    }
-
-    // Getters and Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-
-    public Playlist getPlaylist() { return playlist; }
-    public void setPlaylist(Playlist playlist) { this.playlist = playlist; }
-
-    public Long getMusicId() { return musicId; }
-    public void setMusicId(Long musicId) { this.musicId = musicId; }
-
-    public Integer getPosition() { return position; }
-    public void setPosition(Integer position) { this.position = position; }
-
-    public OffsetDateTime getAddedAt() { return addedAt; }
-    public void setAddedAt(OffsetDateTime addedAt) { this.addedAt = addedAt; }
-}
