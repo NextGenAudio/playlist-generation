@@ -4,5 +4,6 @@ public record PlaylistDTO(
         Long id,
         String name,
         String description,
-        boolean isAiGenerated
+        boolean isAiGenerated,
+        Long musicCount
 ) {}

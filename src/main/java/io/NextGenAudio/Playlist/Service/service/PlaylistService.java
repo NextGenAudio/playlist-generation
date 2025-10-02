@@ -42,7 +42,7 @@ public class PlaylistService {
     public List<PlaylistDTO> getUserPlaylists() {
         return playlistRepository.findByUserIdOrderByCreatedAtDesc(getCurrentUserId())
                 .stream()
-                .map(p -> new PlaylistDTO(p.getPlaylistId(), p.getName(), p.getDescription(), p.getIsAiGenerated()))
+                .map(p -> new PlaylistDTO(p.getPlaylistId(), p.getName(), p.getDescription(), p.getIsAiGenerated(), p.getMusicCount() ))
                 .toList();
     }
 

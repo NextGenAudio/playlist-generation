@@ -37,6 +37,9 @@ public class Playlist {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @Column(name = "music_count", nullable = false)
+    private Long musicCount;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "playlist_musics",
