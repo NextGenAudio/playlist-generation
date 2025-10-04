@@ -64,17 +64,17 @@ public class PlaylistController {
 //        }
 //    }
 //
-//    @DeleteMapping("/{playlistId}")
-//    public ResponseEntity<Void> deletePlaylist(@PathVariable Integer playlistId) {
-//        try {
-//            playlistService.deletePlaylist(playlistId);
-//            return ResponseEntity.noContent().build();
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.notFound().build();
-//        } catch (SecurityException e) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-//        }
-//    }
+    @DeleteMapping("/{playlistId}")
+    public ResponseEntity<String> deletePlaylist(@PathVariable Long playlistId) {
+        try {
+            playlistService.deletePlaylist(playlistId);
+            return ResponseEntity.ok("Playlist deleted successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 //
         @PostMapping("/{playlistId}/tracks")
         public ResponseEntity<Void> addTracksToPlaylist(

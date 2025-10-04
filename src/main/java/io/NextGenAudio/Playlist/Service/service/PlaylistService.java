@@ -140,12 +140,13 @@ public class PlaylistService {
 
     public void deletePlaylist(Long playlistId) {
         String currentUserId = getCurrentUserId();
-        List<Music> playlist = listFiles(playlistId);
-//
-//        if (!playlist.getUserId().equals(currentUserId)) {
-//            throw new SecurityException("Only playlist owner can delete");
-//        }
-//        playlistRepository.delete(playlist);
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new IllegalArgumentException("Playlist not found"));
+
+        if (!playlist.getUserId().equals(currentUserId)) {
+            throw new SecurityException("Only playlist owner can delete");
+        }
+        playlistRepository.delete(playlist);
     }
 
     public void addTracksToPlaylist(Long playlistId, List<Long> fileIds) {
