@@ -11,7 +11,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import net.coobird.thumbnailator.Thumbnails;
+import software.amazon.awssdk.core.sync.RequestBody;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 
@@ -20,6 +28,10 @@ public class PlaylistService {
 
     @Autowired
     private PlaylistRepository playlistRepository;
+
+    @Autowired
+    private S3Client s3Client;
+    private final String bucketName = "sonex2";
 
     @Autowired
     private PlaylistMusicRepository playlistMusicRepository;
@@ -36,13 +48,56 @@ public class PlaylistService {
 
     public Playlist createManualPlaylist(String name,  String description, MultipartFile artwork) {
         Playlist playlist = new Playlist(name, getCurrentUserId());
+        playlist.setDescription(description);
+        playlist.setIsAiGenerated(false);
+        playlist.setCreatedAt(java.time.OffsetDateTime.now());
+        playlist.setMusicCount(0L);
+
+
+        if (artwork != null && !artwork.isEmpty()) {
+            String userId = getCurrentUserId();
+
+            try {
+                String uniqueFileName = System.currentTimeMillis() + "_" + artwork.getOriginalFilename();
+                String s3Key = userId + "/images/" + uniqueFileName;
+
+                // ✅ Compress image in-memory
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                Thumbnails.of(artwork.getInputStream())
+                        .size(800, 800)       // resize (max 800px)
+                        .outputQuality(0.7)   // reduce quality for smaller file
+                        .toOutputStream(outputStream);
+
+                byte[] compressedBytes = outputStream.toByteArray();
+
+                // ✅ Upload compressed file to S3 (make public)
+                try (InputStream inputStream = new ByteArrayInputStream(compressedBytes)) {
+                    s3Client.putObject(
+                            PutObjectRequest.builder()
+                                    .bucket(bucketName)
+                                    .key(s3Key)
+                                    .contentType(artwork.getContentType())
+                                    .build(),
+                            RequestBody.fromInputStream(inputStream, compressedBytes.length)
+                    );
+                }
+
+                // ✅ Store full public URL in DB
+                String publicUrl = "https://" + bucketName + ".s3.amazonaws.com/" + s3Key;
+                playlist.setPlaylistArt(publicUrl);
+
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload artwork to S3", e);
+            }
+        }
+
         return playlistRepository.save(playlist);
     }
 
     public List<PlaylistDTO> getUserPlaylists() {
         return playlistRepository.findByUserIdOrderByCreatedAtDesc(getCurrentUserId())
                 .stream()
-                .map(p -> new PlaylistDTO(p.getPlaylistId(), p.getName(), p.getDescription(), p.getIsAiGenerated(), p.getMusicCount() ))
+                .map(p -> new PlaylistDTO(p.getPlaylistId(), p.getName(), p.getDescription(), p.getIsAiGenerated(), p.getMusicCount(), p.getPlaylistArt()))
                 .toList();
     }
 
@@ -100,10 +155,10 @@ public class PlaylistService {
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new IllegalArgumentException("Playlist not found"));
 
-        // Check ownership (uncomment if needed)
-        // if (!playlist.getUserId().equals(currentUserId)) {
-        //     throw new SecurityException("Only playlist owner can add tracks");
-        // }
+//         Check ownership (uncomment if needed)
+         if (!playlist.getUserId().equals(currentUserId)) {
+             throw new SecurityException("Only playlist owner can add tracks");
+         }
 
         // Find the current max position in the playlist
         Integer currentMaxPosition = playlistMusicRepository.findMaxPositionByPlaylistId(playlistId);

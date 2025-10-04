@@ -5,5 +5,6 @@ public record PlaylistDTO(
         String name,
         String description,
         boolean isAiGenerated,
-        Long musicCount
+        Long musicCount,
+        String playlistArt
 ) {}

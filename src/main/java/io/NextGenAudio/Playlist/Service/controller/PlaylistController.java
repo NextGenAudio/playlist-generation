@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 
@@ -21,18 +22,16 @@ public class PlaylistController {
     @Autowired
     private PlaylistService playlistService;
 
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Playlist> createPlaylist(
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "artwork", required = false) MultipartFile artwork
     )  {
-        try {
+
             Playlist newPlaylist = playlistService.createManualPlaylist(name, description, artwork);
-            return ResponseEntity.status(HttpStatus.CREATED).body(newPlaylist);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+            return ResponseEntity.ok(newPlaylist);
+
     }
 
     @GetMapping
@@ -82,6 +81,9 @@ public class PlaylistController {
                 @PathVariable Long playlistId,
                 @RequestBody AddTracksRequest request) {
             try {
+                if (request.getFileIds() == null || request.getFileIds().isEmpty()) {
+                    return ResponseEntity.badRequest().build();
+                }
                 playlistService.addTracksToPlaylist(
                         playlistId,
                         request.getFileIds()
@@ -91,6 +93,9 @@ public class PlaylistController {
                 return ResponseEntity.badRequest().build();
             } catch (SecurityException e) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            } catch (Exception e) {
+                e.printStackTrace(); // Log for debugging
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
         }
 

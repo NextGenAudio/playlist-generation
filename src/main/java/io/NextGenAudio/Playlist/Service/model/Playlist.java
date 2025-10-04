@@ -34,12 +34,16 @@ public class Playlist {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    @Column(name = "music_count", nullable = false)
+    @Column(name = "music_count")
     private Long musicCount;
 
+    @Column(name = "playlist_art")
+    private String playlistArt;
+
+    private Boolean isPlaying = false;
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "playlist_musics",
