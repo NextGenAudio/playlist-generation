@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
+import io.NextGenAudio.Playlist.Service.model.Genre;
+import io.NextGenAudio.Playlist.Service.model.Mood;
+import io.NextGenAudio.Playlist.Service.model.Playlist;
 import java.util.List;
 import java.util.Map;
 //import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
@@ -52,6 +54,26 @@ public class Music {
 
     @Column(name = "is_liked")
     private boolean isLiked;
+
+    @Column(name = "x_score")
+    private float xScore;
+
+    @Column(name = "y_score")
+    private float yScore;
+
+    @Column(name = "last_listened_at")
+    private LocalDateTime lastListenedAt;
+
+    @Column(name = "listen_count")
+    private Long listenCount;
+
+    @ManyToOne
+    @JoinColumn(name = "genre_id")
+    private Genre genre;
+
+    @ManyToOne
+    @JoinColumn(name = "mood_id")
+    private Mood mood;
 
     @Column(name="metadata", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
