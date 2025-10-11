@@ -1,7 +1,7 @@
 package io.NextGenAudio.Playlist.Service.service;
 
 import io.NextGenAudio.Playlist.Service.dto.PlaylistDTO;
-import io.NextGenAudio.Playlist.Service.dto.PlaylistWithMusicsDTO;
+import io.NextGenAudio.Playlist.Service.dto.MusicBrief;
 import io.NextGenAudio.Playlist.Service.model.*;
 import io.NextGenAudio.Playlist.Service.repository.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,7 +9,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -36,12 +35,15 @@ public class PlaylistService {
     @Autowired
     private PlaylistMusicRepository playlistMusicRepository;
 
+    @Autowired
+    private MusicRepository musicRepository;
+
+
     private String getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new SecurityException("Not authenticated");
         }
-
         // Get the user ID (UUID you set in your filter)
         return auth.getName();
     }
@@ -118,14 +120,21 @@ public class PlaylistService {
 
 
 
-    public List<Music> listFiles(Long playlistId) {
+    public List<MusicBrief> listFiles(Long playlistId) {
+        String currentUserId = getCurrentUserId();
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist not found"));
-        return playlist.getMusics();
+        if (!playlist.getUserId().equals(currentUserId)) {
+            throw new SecurityException("Only the playlist owner can view");
+        }
+
+        // Use efficient database query that selects only the required fields
+        return musicRepository.findMusicBriefByPlaylistId(playlistId);
     }
 
-//    public Playlist updatePlaylist(Long playlistId, String name) {
-//        String currentUserId = getCurrentUserId();
+
+
+
 //        Playlist playlist = listFiles(playlistId);
 //
 //        if (!playlist.getCurrentUserId().equals(currentUserId)) {
@@ -201,4 +210,6 @@ public class PlaylistService {
             playlistMusicRepository.save(track);
         }
     }
+
+
 }

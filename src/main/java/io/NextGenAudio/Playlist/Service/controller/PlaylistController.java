@@ -1,6 +1,6 @@
 package io.NextGenAudio.Playlist.Service.controller;
 
-import io.NextGenAudio.Playlist.Service.model.Music;
+import io.NextGenAudio.Playlist.Service.dto.MusicBrief;
 import io.NextGenAudio.Playlist.Service.service.PlaylistService;
 import io.NextGenAudio.Playlist.Service.model.Playlist;
 import io.NextGenAudio.Playlist.Service.dto.*;
@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/playlists")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"}, allowCredentials = "true")
 public class PlaylistController {
 
     @Autowired
@@ -40,11 +39,11 @@ public class PlaylistController {
         return ResponseEntity.ok(playlists);
     }
 
-
     @GetMapping("/list")
-    public ResponseEntity<List<Music>> listFiles(@RequestParam(required = false) Long playlistId) {
+    public ResponseEntity<List<MusicBrief>> listFiles(@RequestParam(required = false) Long playlistId) {
         return ResponseEntity.ok(playlistService.listFiles(playlistId));
     }
+
 
 //    @PutMapping("/{playlistId}")
 //    public ResponseEntity<Playlist> updatePlaylist(
