@@ -21,15 +21,15 @@ public class PlaylistController {
     @Autowired
     private PlaylistService playlistService;
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(value = "/create", consumes = {"multipart/form-data"})
     public ResponseEntity<Playlist> createPlaylist(
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "artwork", required = false) MultipartFile artwork
-    )  {
+    ) {
 
-            Playlist newPlaylist = playlistService.createManualPlaylist(name, description, artwork);
-            return ResponseEntity.ok(newPlaylist);
+        Playlist newPlaylist = playlistService.createManualPlaylist(name, description, artwork);
+        return ResponseEntity.ok(newPlaylist);
 
     }
 
@@ -45,7 +45,7 @@ public class PlaylistController {
     }
 
 
-//    @PutMapping("/{playlistId}")
+    //    @PutMapping("/{playlistId}")
 //    public ResponseEntity<Playlist> updatePlaylist(
 //            @PathVariable Integer playlistId,
 //            @RequestBody UpdatePlaylistRequest request) {
@@ -74,29 +74,30 @@ public class PlaylistController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
-//
-        @PostMapping("/{playlistId}/tracks")
-        public ResponseEntity<Void> addTracksToPlaylist(
-                @PathVariable Long playlistId,
-                @RequestBody AddTracksRequest request) {
-            try {
-                if (request.getFileIds() == null || request.getFileIds().isEmpty()) {
-                    return ResponseEntity.badRequest().build();
-                }
-                playlistService.addTracksToPlaylist(
-                        playlistId,
-                        request.getFileIds()
-                );
-                return ResponseEntity.ok().build();
-            } catch (IllegalArgumentException e) {
+
+    //
+    @PostMapping("/{playlistId}/tracks")
+    public ResponseEntity<Void> addTracksToPlaylist(
+            @PathVariable Long playlistId,
+            @RequestBody AddTracksRequest request) {
+        try {
+            if (request.getFileIds() == null || request.getFileIds().isEmpty()) {
                 return ResponseEntity.badRequest().build();
-            } catch (SecurityException e) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            } catch (Exception e) {
-                e.printStackTrace(); // Log for debugging
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
+            playlistService.addTracksToPlaylist(
+                    playlistId,
+                    request.getFileIds()
+            );
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Log for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
 
     @DeleteMapping("/{playlistId}/tracks")
     public ResponseEntity<Void> removeTracksFromPlaylist(
@@ -110,5 +111,50 @@ public class PlaylistController {
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+    }
+
+    @PostMapping("/{playlistId}/add-collaborator")
+    public ResponseEntity<String> addContributor(@RequestParam String profileId, @RequestParam Integer role, @PathVariable Long playlistId) {
+        try {
+            String response = playlistService.addCollaborator(playlistId, profileId, role);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Log for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{playlistId}/collaborators")
+    public ResponseEntity<List<CollaboratorDTO>> getCollaborators(@PathVariable Long playlistId) {
+        try {
+            List<CollaboratorDTO> collaborators = playlistService.getCollaborators(playlistId);
+            return ResponseEntity.ok(collaborators);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Log for debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("remove-collaborator/{playlistId}")
+    public ResponseEntity<String> removeCollaborator(@PathVariable Long playlistId, @RequestParam String userId) {
+        try {
+             String response = playlistService.removeCollaborator(playlistId, userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Log for debugging
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 }

@@ -3,7 +3,9 @@ package io.NextGenAudio.Playlist.Service.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
@@ -13,14 +15,13 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "playlists")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Playlist {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "playlist_id")
     private Long playlistId;
-
-    @Column(name = "user_id", nullable = false)
-    private String userId;
 
     @Column(name= "name" ,nullable = false)
     private String name;
@@ -53,26 +54,13 @@ public class Playlist {
     @JsonIgnore
     private List<Music> musics;
 
-    
+    @ManyToMany
+    @JoinTable(
+            name = "playlist_users",
+            joinColumns = @JoinColumn(name = "playlist_id")
+    )
+    private List<PlaylistUser> playlistUsers;
 
-    // Constructors
-    public Playlist() {
-        this.createdAt = OffsetDateTime.now();
-        this.updatedAt = OffsetDateTime.now();
-    }
-
-    public Playlist(String name, String userId) {
-        this();
-        this.name = name;
-        this.userId = userId;
-    }
-
-    public Playlist(String name, String description, String userId, Boolean isPublic) {
-        this();
-        this.name = name;
-        this.description = description;
-        this.userId = userId;
-    }
 
     @PreUpdate
     public void preUpdate() {
