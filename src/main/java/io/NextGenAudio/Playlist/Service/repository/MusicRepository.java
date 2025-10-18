@@ -2,12 +2,12 @@ package io.NextGenAudio.Playlist.Service.repository;
 
 import io.NextGenAudio.Playlist.Service.model.Music;
 import io.NextGenAudio.Playlist.Service.dto.MusicBrief;
+import io.NextGenAudio.Playlist.Service.model.Playlist;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface MusicRepository extends JpaRepository<Music, Long> {
 
@@ -18,5 +18,8 @@ public interface MusicRepository extends JpaRepository<Music, Long> {
            "WHERE pm.playlist.playlistId = :playlistId " +
            "ORDER BY pm.position ASC")
     List<MusicBrief> findMusicBriefByPlaylistId(@Param("playlistId") Long playlistId);
+
+    @Query("SELECT pm.playlist FROM PlaylistMusic pm WHERE pm.musicId = :musicId")
+    List<Playlist> findPlaylistsById(@Param("musicId") Long musicId);
 
 }

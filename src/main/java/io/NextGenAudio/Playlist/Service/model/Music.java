@@ -79,8 +79,12 @@ public class Music {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> metadata;
 
-    @ManyToMany(mappedBy = "musics")
-    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+            name = "playlist_musics",
+            joinColumns = @JoinColumn(name = "music_id"),
+            inverseJoinColumns = @JoinColumn(name = "playlist_id")
+    )
     private List<Playlist> playlists;
 }
 

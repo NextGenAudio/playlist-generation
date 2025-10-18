@@ -27,7 +27,7 @@
         @Column
         private Integer position;
 
-        @Column(name = "added_at", nullable = false)
+        @Column(name = "added_at")
         private OffsetDateTime addedAt;
 
         // Constructors
