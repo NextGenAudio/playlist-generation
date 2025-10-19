@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import io.NextGenAudio.Playlist.Service.dto.SuggestedPlaylistDTO;
 
 
 @RestController
@@ -44,7 +45,23 @@ public class PlaylistController {
         return ResponseEntity.ok(playlistService.listFiles(playlistId));
     }
 
+    @GetMapping("/suggestedplaylist")
+    public ResponseEntity<List<SuggestedPlaylistDTO>> getSuggestedPlaylists() {
+        List<SuggestedPlaylistDTO> suggestedPlaylists = playlistService.getSuggestedPlaylists();
+        return ResponseEntity.ok(suggestedPlaylists);
+    }
 
+    @GetMapping("/suggestedplaylist/tracks")
+    public ResponseEntity<List<MusicBrief>> getTracksForSuggestedPlaylist(
+            @RequestParam String mood,
+            @RequestParam String genre) {
+        try {
+            List<MusicBrief> tracks = playlistService.getTracksForSuggestedPlaylist(mood, genre);
+            return ResponseEntity.ok(tracks);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
     //    @PutMapping("/{playlistId}")
 //    public ResponseEntity<Playlist> updatePlaylist(
 //            @PathVariable Integer playlistId,
