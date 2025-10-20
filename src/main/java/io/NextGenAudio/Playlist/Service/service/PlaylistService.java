@@ -286,7 +286,8 @@ public class PlaylistService {
                 .map(combo -> new SuggestedPlaylistDTO(
                         playlistNameMapper.getPlaylistName(combo.getMood(), combo.getGenre()),
                         combo.getMood(),
-                        combo.getGenre()
+                        combo.getGenre(),
+                        true
                 ))
                 .collect(Collectors.toList());
     }

@@ -11,4 +11,5 @@ public class SuggestedPlaylistDTO {
     private String playlistName;
     private String mood;
     private String genre;
+    private boolean isAiGenerated;
 }
