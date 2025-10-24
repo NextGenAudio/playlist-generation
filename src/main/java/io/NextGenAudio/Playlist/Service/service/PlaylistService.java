@@ -21,12 +21,17 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import net.coobird.thumbnailator.Thumbnails;
 import software.amazon.awssdk.core.sync.RequestBody;
 
+import io.NextGenAudio.Playlist.Service.dto.SuggestedPlaylistDTO;
+import io.NextGenAudio.Playlist.Service.dto.TopMoodGenreDTO;
+import org.springframework.data.domain.PageRequest;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -46,6 +51,9 @@ public class PlaylistService {
 
     @Autowired
     private MusicRepository musicRepository;
+
+    @Autowired
+    private PlaylistNameMapper playlistNameMapper;
 
     private String getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -271,5 +279,28 @@ public class PlaylistService {
 
         playlistUserRepository.delete(collaborator);
         return "Collaborator removed successfully";
+    }
+
+    public List<SuggestedPlaylistDTO> getSuggestedPlaylists() {
+        // We use PageRequest to get only the TOP 10 results from the query
+        List<TopMoodGenreDTO> topCombinations = musicRepository
+                .findTopMoodGenreCombinations(PageRequest.of(0, 10));
+
+        // Map the database results to the final DTO
+        return topCombinations.stream()
+                .map(combo -> new SuggestedPlaylistDTO(
+                        playlistNameMapper.getPlaylistName(combo.getMood(), combo.getGenre()),
+                        combo.getMood(),
+                        combo.getGenre(),
+                        true
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<MusicBrief> getTracksForSuggestedPlaylist(String mood, String genre) {
+        if (mood == null || genre == null) {
+            throw new IllegalArgumentException("Mood and genre parameters are required");
+        }
+        return musicRepository.findMusicBriefByMoodAndGenre(mood, genre);
     }
 }
