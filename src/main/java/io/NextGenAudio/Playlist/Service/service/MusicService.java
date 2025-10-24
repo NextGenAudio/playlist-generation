@@ -1,8 +1,8 @@
 package io.NextGenAudio.Playlist.Service.service;
 
-import io.NextGenAudio.Playlist.Service.model.Playlist;
-import io.NextGenAudio.Playlist.Service.repository.MusicRepository;
-import io.NextGenAudio.Playlist.Service.repository.PlaylistRepository;
+import io.NextGenAudio.Playlist.Service.model.primary.Playlist;
+import io.NextGenAudio.Playlist.Service.repository.primary.MusicRepository;
+import io.NextGenAudio.Playlist.Service.repository.primary.PlaylistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

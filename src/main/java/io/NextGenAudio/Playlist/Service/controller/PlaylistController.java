@@ -2,14 +2,13 @@ package io.NextGenAudio.Playlist.Service.controller;
 
 import io.NextGenAudio.Playlist.Service.dto.MusicBrief;
 import io.NextGenAudio.Playlist.Service.service.PlaylistService;
-import io.NextGenAudio.Playlist.Service.model.Playlist;
+import io.NextGenAudio.Playlist.Service.model.primary.Playlist;
 import io.NextGenAudio.Playlist.Service.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 

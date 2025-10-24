@@ -1,7 +1,7 @@
 package io.NextGenAudio.Playlist.Service; // This package MUST match the one above
 
-import io.NextGenAudio.Playlist.Service.repository.PlaylistMusicRepository;
-import io.NextGenAudio.Playlist.Service.repository.PlaylistRepository;
+import io.NextGenAudio.Playlist.Service.repository.primary.PlaylistMusicRepository;
+import io.NextGenAudio.Playlist.Service.repository.primary.PlaylistRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;

@@ -1,4 +1,4 @@
-package io.NextGenAudio.Playlist.Service.model;
+package io.NextGenAudio.Playlist.Service.model.primary;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

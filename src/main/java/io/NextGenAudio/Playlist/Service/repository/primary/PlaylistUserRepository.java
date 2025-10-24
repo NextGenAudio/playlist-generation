@@ -1,7 +1,7 @@
-package io.NextGenAudio.Playlist.Service.repository;
+package io.NextGenAudio.Playlist.Service.repository.primary;
 
 import io.NextGenAudio.Playlist.Service.dto.CollaboratorDTO;
-import io.NextGenAudio.Playlist.Service.model.PlaylistUser;
+import io.NextGenAudio.Playlist.Service.model.primary.PlaylistUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

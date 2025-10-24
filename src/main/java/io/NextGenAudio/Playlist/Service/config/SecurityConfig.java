@@ -1,35 +1,84 @@
 package io.NextGenAudio.Playlist.Service.config;
 
-import io.NextGenAudio.Playlist.Service.security.NextAuthSessionFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import io.NextGenAudio.Playlist.Service.security.JwtSecurityFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-
-    @Autowired
-    private NextAuthSessionFilter nextAuthSessionFilter;
+    private final UserDetailsService userDetailsService;
+    private final JwtSecurityFilter jwtSecurityFilter;
+    public SecurityConfig(UserDetailsService userDetailsService, JwtSecurityFilter jwtSecurityFilter){
+        this.userDetailsService = userDetailsService;
+        this.jwtSecurityFilter = jwtSecurityFilter;
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   CorsConfigurationSource corsConfigurationSource) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))   // <-- use your CorsConfig bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+        httpSecurity
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()      // allow preflight
-                        .requestMatchers("/public/**", "/health").permitAll()
-                        .requestMatchers("/files/**").authenticated()
-                        .anyRequest().permitAll()
+                        // Playlist Controller and musisc controller endpoints
+                        .requestMatchers("/playlist-service/playlists/create").permitAll()
+                        .requestMatchers("/playlist-service/playlists").permitAll()
+                        .requestMatchers("/playlist-service/playlists/list").permitAll()
+                        .requestMatchers("/playlist-service/playlists/*/tracks").permitAll()
+                        .requestMatchers("/playlist-service/playlists/*/add-collaborator").permitAll()
+                        .requestMatchers("/playlist-service/playlists/*/collaborators").permitAll()
+                        .requestMatchers("/playlist-service/playlists/remove-collaborator/*").permitAll()
+                        .requestMatchers("/playlist-service/music/playlist-ids/*").permitAll()
+                        .requestMatchers("/playlist-service/music/remove-playlist-ids/*").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(nextAuthSessionFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtSecurityFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
+        return httpSecurity.build();
     }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(){
+        CorsConfiguration configuration=new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization","Content-Type","Accept"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**",configuration);
+        return source;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(){
+        DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userDetailsService);
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(authenticationProvider);
+    }
+
+
 }

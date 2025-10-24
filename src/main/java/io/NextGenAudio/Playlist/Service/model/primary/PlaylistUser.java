@@ -1,6 +1,5 @@
-package io.NextGenAudio.Playlist.Service.model;
+package io.NextGenAudio.Playlist.Service.model.primary;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

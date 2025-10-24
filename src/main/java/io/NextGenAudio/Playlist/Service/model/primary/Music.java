@@ -1,22 +1,17 @@
-package io.NextGenAudio.Playlist.Service.model;
+package io.NextGenAudio.Playlist.Service.model.primary;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import io.NextGenAudio.Playlist.Service.model.Genre;
-import io.NextGenAudio.Playlist.Service.model.Mood;
-import io.NextGenAudio.Playlist.Service.model.Playlist;
+
 import java.util.List;
 import java.util.Map;
 //import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Getter
 @Setter

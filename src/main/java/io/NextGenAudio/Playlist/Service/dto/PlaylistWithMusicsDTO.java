@@ -1,6 +1,6 @@
 package io.NextGenAudio.Playlist.Service.dto;
 
-import io.NextGenAudio.Playlist.Service.model.Music;
+import io.NextGenAudio.Playlist.Service.model.primary.Music;
 
 import java.util.List;
 
