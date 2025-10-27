@@ -1,5 +1,4 @@
 package io.NextGenAudio.Playlist.Service.security;
-
 import io.NextGenAudio.Playlist.Service.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
 @Component
 public class JwtSecurityFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
