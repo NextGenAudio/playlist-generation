@@ -4,6 +4,7 @@ import io.NextGenAudio.Playlist.Service.dto.MusicBrief;
 import io.NextGenAudio.Playlist.Service.service.PlaylistService;
 import io.NextGenAudio.Playlist.Service.model.primary.Playlist;
 import io.NextGenAudio.Playlist.Service.dto.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -25,23 +26,24 @@ public class PlaylistController {
     public ResponseEntity<Playlist> createPlaylist(
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "artwork", required = false) MultipartFile artwork
+            @RequestParam(value = "artwork", required = false) MultipartFile artwork,
+            HttpServletRequest request
     ) {
 
-        Playlist newPlaylist = playlistService.createManualPlaylist(name, description, artwork);
+        Playlist newPlaylist = playlistService.createManualPlaylist(name, description, artwork,request);
         return ResponseEntity.ok(newPlaylist);
 
     }
 
     @GetMapping
-    public ResponseEntity<List<PlaylistDTO>> getUserPlaylists() {
-        List<PlaylistDTO> playlists = playlistService.getUserPlaylists();
+    public ResponseEntity<List<PlaylistDTO>> getUserPlaylists(HttpServletRequest request ) {
+        List<PlaylistDTO> playlists = playlistService.getUserPlaylists(request);
         return ResponseEntity.ok(playlists);
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<MusicBrief>> listFiles(@RequestParam(required = false) Long playlistId) {
-        return ResponseEntity.ok(playlistService.listFiles(playlistId));
+    public ResponseEntity<List<MusicBrief>> listFiles(@RequestParam(required = false) Long playlistId, HttpServletRequest request ) {
+        return ResponseEntity.ok(playlistService.listFiles(playlistId, request));
     }
 
     @GetMapping("/suggestedplaylist")
@@ -80,9 +82,9 @@ public class PlaylistController {
 //    }
 //
     @DeleteMapping("/{playlistId}")
-    public ResponseEntity<String> deletePlaylist(@PathVariable Long playlistId) {
+    public ResponseEntity<String> deletePlaylist(@PathVariable Long playlistId,HttpServletRequest request ) {
         try {
-            playlistService.deletePlaylist(playlistId);
+            playlistService.deletePlaylist(playlistId, request);
             return ResponseEntity.ok("Playlist deleted successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
@@ -95,14 +97,16 @@ public class PlaylistController {
     @PostMapping("/{playlistId}/tracks")
     public ResponseEntity<Void> addTracksToPlaylist(
             @PathVariable Long playlistId,
-            @RequestBody AddTracksRequest request) {
+            @RequestBody AddTracksRequest request,
+            HttpServletRequest request1 ) {
         try {
             if (request.getFileIds() == null || request.getFileIds().isEmpty()) {
                 return ResponseEntity.badRequest().build();
             }
             playlistService.addTracksToPlaylist(
                     playlistId,
-                    request.getFileIds()
+                    request.getFileIds(),
+                    request1
             );
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
@@ -118,9 +122,10 @@ public class PlaylistController {
     @DeleteMapping("/{playlistId}/tracks")
     public ResponseEntity<Void> removeTracksFromPlaylist(
             @PathVariable Long playlistId,
-            @RequestParam List<Long> musicIds) {
+            @RequestParam List<Long> musicIds,
+            HttpServletRequest request ) {
         try {
-            playlistService.removeTracksFromPlaylist(playlistId, musicIds);
+            playlistService.removeTracksFromPlaylist(playlistId, musicIds, request);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -130,9 +135,9 @@ public class PlaylistController {
     }
 
     @PostMapping("/{playlistId}/add-collaborator")
-    public ResponseEntity<String> addContributor(@RequestParam String profileId, @RequestParam Integer role, @PathVariable Long playlistId) {
+    public ResponseEntity<String> addContributor(@RequestParam String profileId, @RequestParam Integer role, @PathVariable Long playlistId, HttpServletRequest request ) {
         try {
-            String response = playlistService.addCollaborator(playlistId, profileId, role);
+            String response = playlistService.addCollaborator(playlistId, profileId, role, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -145,9 +150,9 @@ public class PlaylistController {
     }
 
     @GetMapping("/{playlistId}/collaborators")
-    public ResponseEntity<List<CollaboratorDTO>> getCollaborators(@PathVariable Long playlistId) {
+    public ResponseEntity<List<CollaboratorDTO>> getCollaborators(@PathVariable Long playlistId,HttpServletRequest request ) {
         try {
-            List<CollaboratorDTO> collaborators = playlistService.getCollaborators(playlistId);
+            List<CollaboratorDTO> collaborators = playlistService.getCollaborators(playlistId, request);
             return ResponseEntity.ok(collaborators);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -160,9 +165,9 @@ public class PlaylistController {
     }
 
     @DeleteMapping("remove-collaborator/{playlistId}")
-    public ResponseEntity<String> removeCollaborator(@PathVariable Long playlistId, @RequestParam String userId) {
+    public ResponseEntity<String> removeCollaborator(@PathVariable Long playlistId, @RequestParam String userId, HttpServletRequest request ) {
         try {
-             String response = playlistService.removeCollaborator(playlistId, userId);
+             String response = playlistService.removeCollaborator(playlistId, userId,request );
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
