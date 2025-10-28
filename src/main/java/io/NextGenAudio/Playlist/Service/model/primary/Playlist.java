@@ -43,7 +43,6 @@ public class Playlist {
     @Column(name = "playlist_art")
     private String playlistArt;
 
-    private Boolean isPlaying = false;
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "playlist_musics",

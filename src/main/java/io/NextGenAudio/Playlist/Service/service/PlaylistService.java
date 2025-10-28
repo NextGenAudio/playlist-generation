@@ -10,7 +10,9 @@ import io.NextGenAudio.Playlist.Service.repository.primary.MusicRepository;
 import io.NextGenAudio.Playlist.Service.repository.primary.PlaylistMusicRepository;
 import io.NextGenAudio.Playlist.Service.repository.primary.PlaylistRepository;
 import io.NextGenAudio.Playlist.Service.repository.primary.PlaylistUserRepository;
+import io.NextGenAudio.Playlist.Service.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,18 +57,25 @@ public class PlaylistService {
     @Autowired
     private PlaylistNameMapper playlistNameMapper;
 
-    private String getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new SecurityException("Not authenticated");
-        }
-        // Get the user ID (UUID you set in your filter)
-        return auth.getName();
+    private JwtUtil jwtUtil;
+
+    public PlaylistService(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
     }
 
-    public Playlist createManualPlaylist(String name, String description, MultipartFile artwork) {
+    private String getCurrentUsername(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        String username = "";
+        if(authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            username = jwtUtil.extractUsername(token);
+        }
+        return username;
+    }
+
+    public Playlist createManualPlaylist(String name, String description, MultipartFile artwork, HttpServletRequest request) {
         String bucketName = "sonex2";
-        String currentUserId = getCurrentUserId();
+        String currentUserId = getCurrentUsername(request);
 
         Playlist playlist = new Playlist();
         playlist.setName(name);
@@ -124,12 +133,12 @@ public class PlaylistService {
         return savedPlaylist;
     }
 
-    public List<PlaylistDTO> getUserPlaylists() {
-        return playlistRepository.findByUserIdOrderByCreatedAtDesc(getCurrentUserId());
+    public List<PlaylistDTO> getUserPlaylists(HttpServletRequest request ) {
+        return playlistRepository.findByUserIdOrderByCreatedAtDesc(getCurrentUsername(request));
     }
 
-    public List<MusicBrief> listFiles(Long playlistId) {
-        String currentUserId = getCurrentUserId();
+    public List<MusicBrief> listFiles(Long playlistId,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
 
         // Check if user has access to this playlist
         if (!playlistUserRepository.existsByPlaylistIdAndUserId(playlistId, currentUserId)) {
@@ -140,8 +149,8 @@ public class PlaylistService {
         return musicRepository.findMusicBriefByPlaylistId(playlistId);
     }
 
-    public void deletePlaylist(Long playlistId) {
-        String currentUserId = getCurrentUserId();
+    public void deletePlaylist(Long playlistId,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new IllegalArgumentException("Playlist not found"));
@@ -154,8 +163,8 @@ public class PlaylistService {
         playlistRepository.delete(playlist);
     }
 
-    public void addTracksToPlaylist(Long playlistId, List<Long> fileIds) {
-        String currentUserId = getCurrentUserId();
+    public void addTracksToPlaylist(Long playlistId, List<Long> fileIds,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
 
         // Fetch the playlist entity
         Playlist playlist = playlistRepository.findById(playlistId)
@@ -182,8 +191,8 @@ public class PlaylistService {
         }
     }
 
-    public void removeTracksFromPlaylist(Long playlistId, List<Long> musicIds) {
-        String currentUserId = getCurrentUserId();
+    public void removeTracksFromPlaylist(Long playlistId, List<Long> musicIds,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new EntityNotFoundException("Playlist not found with id " + playlistId));
 
@@ -207,8 +216,8 @@ public class PlaylistService {
         }
     }
 
-    public List<CollaboratorDTO> getCollaborators(Long playlistId) {
-        String currentUserId = getCurrentUserId();
+    public List<CollaboratorDTO> getCollaborators(Long playlistId,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
 
         // Check if user has access to this playlist
         if (!playlistUserRepository.existsByPlaylistIdAndUserId(playlistId, currentUserId)) {
@@ -218,8 +227,8 @@ public class PlaylistService {
         return playlistUserRepository.findUserIdsByPlaylistId(playlistId);
     }
 
-    public String addCollaborator(Long playlistId, String collaboratorUserId, Integer role) {
-        String currentUserId = getCurrentUserId();
+    public String addCollaborator(Long playlistId, String collaboratorUserId, Integer role,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
         System.out.println("=== Add Collaborator Debug ===");
         System.out.println("Current User ID: " + currentUserId);
         System.out.println("Playlist ID: " + playlistId);
@@ -262,8 +271,8 @@ public class PlaylistService {
         return "Collaborator added successfully";
     }
 
-    public String removeCollaborator(Long playlistId, String collaboratorUserId) {
-        String currentUserId = getCurrentUserId();
+    public String removeCollaborator(Long playlistId, String collaboratorUserId,HttpServletRequest request ) {
+        String currentUserId = getCurrentUsername(request);
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new IllegalArgumentException("Playlist not found"));
