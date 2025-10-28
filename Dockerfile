@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy the Maven or Gradle wrapper and project files
 COPY . .
-
+# Convert Windows line endings & give permission
 # Build the JAR file (use the correct command for your build tool)
 # For Maven:
 # Install dos2unix and fix line endings
